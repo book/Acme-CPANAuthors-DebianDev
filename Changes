@@ -1,0 +1,8 @@
+Revision history for Acme-CPANAuthors-DebianDev
+
+{{$NEXT}}
+    - added a Changes file
+
+1.000 Sat Sep 27 2014
+    - obtain the data from the Debian Perl Group member list
+      https://alioth.debian.org/project/memberlist.php?group_id=30274
