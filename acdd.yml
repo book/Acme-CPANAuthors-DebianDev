@@ -1,0 +1,135 @@
+---
+confirmed_not:
+  ACID:
+    - acid
+  BRAND:
+    - brand-guest
+  CHRISM:
+    - chrism
+  CLINT:
+    - clint-guest
+  EIRO:
+    - eiro-guest
+  FLORIAN:
+    - florian-guest
+  FRANCK:
+    - franck
+    - franck-guest
+  KJETIL:
+    - kjetil-guest
+  ROGER:
+    - roger-guest
+  RYAN:
+    - ryan
+  SILASMONK:
+    - periapt-guest
+  SULFERIC:
+    - ron
+debian_dev:
+  ABE: abe
+  ALEXBIO: ghedo
+  ALEXM: alexm-guest
+  AMARSCHKE: ama-guest
+  ARUN: arun-guest
+  BAS: bas
+  BBYRD: sineswiper-guest
+  BOGDAN: bogdan-guest
+  BRICAS: bricas-guest
+  CHILTS: andychilton-guest
+  CJCOLLIER: cjadamscollier-guest
+  COOK: kees
+  COSIMO: cosimo-guest
+  CVICENTE: cvicente-guest
+  DAMOG: damog
+  DAXIM: daxim-guest
+  DDEIMEKE: ddeimeke-guest
+  DDUMONT: dod
+  DEEPAK: deepak-guest
+  DEXTER: dexter
+  DIOCLES: diocles
+  DKG: dkg
+  DKOGAN: dkogan-guest
+  DLINTOTT: dlintott-guest
+  DOM: dom
+  DOMINIX: dominix-guest
+  DWILSON: dwilson-guest
+  EDWARD: edward
+  EREZ: erez-guest
+  EZRA: ezra-guest
+  FANGLY: fangly-guest
+  FCECCONI: brand-guest
+  FLORA: florian-guest
+  FRANCKC: franck-guest
+  FRL: djpig
+  GANGLION: bolangi-guest
+  GLAUCO: thiagoglauco-guest
+  GUIMARD: xguimard-guest
+  HACHI: hachi-guest
+  HAGGAI: alanhaggai-guest
+  HORNBURG: racke
+  INGY: ingy-guest
+  INTRIGERI: intrigeri
+  IOANR: ioanrogers-guest
+  IVAN: ivan
+  JALDHAR: jaldhar
+  JAME: jame-guest
+  JAWNSY: jawnsy-guest
+  JAYBONCI: jaybonci
+  JEB: jeb
+  JEREMIAH: jeremiah-guest
+  JKUTEJ: jozef-guest
+  JMEHNLE: jmehnle-guest
+  JOENIO: joenio-guest
+  JOEY: joeyh
+  JONASS: js
+  JURUEN: juruen-guest
+  KBLIN: kblin-guest
+  KHAREC: kharec-guest
+  KIMMEL: kimmel-guest
+  KJETILK: kjetil-guest
+  KRZKRZ: eloy
+  LAWSONK: keith-guest
+  LIGHTSEY: lightsey
+  LKUNDRAK: lkundrak-guest
+  MARCC: eiro-guest
+  MGV: marius-guest
+  MMJB: he-guest
+  MOGAAL: mogaal-guest
+  MSTPLBG: mstapelberg-guest
+  MSTPLBG: stapelberg
+  MXEY: mxey-guest
+  MZEHRER: mzehrer-guest
+  NPF: npf-guest
+  OLIVER: ollyg-guest
+  OLLY: olly
+  OLOF: olof-guest
+  ONLYJOB: onlyjob
+  ONUR: onur-guest
+  PIETSCH: pietsch-guest
+  PJF: pjf-guest
+  PMAKHOLM: makholm
+  POTYL: potyl-guest
+  RATCLIFFE: jjr
+  RICHIH: richih-guest
+  RICK: shadowspar-guest
+  RKITOVER: caelum-guest
+  ROAM: roam-guest
+  RRA: rra
+  RSHADOW: rshadow-guest
+  RSN: ryan
+  SAPER: maddingue-guest
+  SILASMONK: periapt
+  SJQUINNEY: sjq
+  SMASH: mestre-guest
+  SSM: ssm
+  SUKRIA: sukria
+  TEX: tex-guest
+  UNERA: unera
+  VDANJEAN: vdanjean
+  WALLMARI: wallmari-guest
+  WILSOND: dustywilson-guest
+  WSDOOKADR: wsdookadr-guest
+  XSAWYERX: xsawyerx-guest
+  YVESAGO: yvesago-guest
+  ZACS: zacs-guest
+  ZAKAME: zakame-guest
