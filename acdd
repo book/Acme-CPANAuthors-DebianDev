@@ -1,0 +1,303 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use YAML qw( LoadFile DumpFile );
+use XML::Simple;
+use Text::Unidecode;
+use Time::HiRes qw( time );
+use Path::Class qw( file );
+use Getopt::Long;
+use Pod::Usage;
+
+my $t0 = time;
+
+# actually the default locations for the files
+my %option = (
+    acdd   => 'acdd.yml',
+    pause  => '00whois.xml',       # from http://www.cpan.org/authors/00whois.xml
+    debian => 'debian-dev.html',   # from https://alioth.debian.org/project/memberlist.php?group_id=30274
+    pm => 'lib/Acme/CPANAuthors/DebianDev.pm',
+);
+
+# command line options
+GetOptions(
+    \%option,
+    'search!',                       # look for CPAN authors in the Staff data
+    'module_update|module-update!',  # update the module using the YAML file
+    'yaml_update|yaml-update!',      # update the YAML file using Staff data
+    'verbose!',                      # be verbose
+    'time',                          # some speed measurements
+    'help',                          # short help / SYNOPSIS
+    'manual',                        # full help / manual
+    map "$_=s", keys %option         # all the files we can read or write
+) or pod2usage( -verbose => 0 );
+
+pod2usage( -verbose => 1 ) if $option{help};
+pod2usage( -verbose => 2 ) if $option{manual};
+
+sub speed_of;
+*speed_of = $option{time}
+    ? sub {
+    my ($what) = @_;
+    printf "# %8.3f - $what\n", time - $t0;
+    $t0 = time;
+    }
+    : sub { };
+
+# get our mapping file
+my $acdd = LoadFile( $option{acdd} );
+
+speed_of "loading acdd.yml";
+
+# get the PAUSE data -
+my $pause = XMLin(
+    $option{pause},
+    KeyAttr       => [],
+    SuppressEmpty => ''
+)->{cpanid};
+
+speed_of "loading 00whois.xml";
+
+# hash by PAUSE id, and make some values exist
+my $pause_id = {
+    map {
+        $_->{asciiname}   ||= '';
+        $_->{fullname}    ||= '';
+        $_->{has_cpandir} ||= '';
+        ( $_->{id} => $_ )
+        } @$pause
+};
+
+speed_of "hashing 00whois.xml";
+
+# get the Debian data (only needed for search and updates)
+# using a dump of the alioth page
+my $debian = {};
+do {
+    open my $dd, $option{debian} or die "Can't open $option{debian}: $!";
+    while (<$dd>) {
+        if (m{<div about="https://alioth\.debian\.org/users/([-a-z]+)/" typeof="sioc:UserAccount">.*</span>([^<]+)</div>}) {
+            $debian->{$1} = {
+                id       => $1,
+                fullname => unidecode($2),
+            };
+        }
+    }
+};
+
+speed_of "loading and parsing debian-dev.html";
+
+# search for CPAN authors among debian devs
+if ( $option{search} ) {
+
+    # fixup PAUSE data
+    for my $author (@$pause) {
+        $author->{a_fullname}  = unidecode( $author->{fullname} );
+        $author->{a_asciiname} = unidecode( $author->{asciiname} );
+    }
+
+    my %known = reverse %{ $acdd->{debian_dev} };
+    for my $debian_dev ( sort { $a->{id} cmp $b->{id} } values %$debian ) {
+
+        # skip known authors
+        next if exists $known{ $debian_dev->{id} };
+
+        # or try to find a match in PAUSE
+
+        # name to match against
+        my $name = $debian_dev->{fullname};
+        $name =~ s/ /.*/g;
+        my $re = qr{$name}i;
+
+        # login to match against
+        my $login = uc $debian_dev->{id};
+        $login =~ s/-GUEST//;
+
+        # try all CPAN authors
+        for my $author (@$pause) {
+            print
+                "# $author->{fullname} ",
+                $author->{asciiname} ? "($author->{asciiname}) " : (), "= ",
+                $debian_dev->{fullname},
+                $author->{email} && " <$author->{email}>",
+                "\n  $author->{id}: $debian_dev->{id}\n"
+                if ( (   $login eq $author->{id}
+                    || $author->{a_fullname}  =~ $re
+                    || $author->{a_asciiname} =~ $re )
+                && !grep $debian_dev->{id} eq $_,
+                @{ $acdd->{confirmed_not}{ $author->{id} } || [] } );
+        }
+    }
+    DumpFile( $option{acdd}, $acdd );
+    speed_of 'searching for CPAN authors in debian';
+}
+
+# update the module code
+if ( $option{module_update} ) {
+    require Data::Dumper;
+    require POSIX;
+    my $module = file( $option{pm} );
+    my $source = $module->slurp;
+
+    # split the source
+    my ( $preamble, $postamble )
+        = $source
+        =~ /\A(.*?^use Acme::CPANAuthors::Register \(.*?)^.*?(^\);.*)\z/sm;
+
+    # update code
+    $module->spew(
+        [   $preamble,
+            map( {  my $name = $_->{fullname};
+                        $name .= " ($_->{asciiname})" if $_->{asciiname};
+                    $name = Data::Dumper::qquote($name) . ',';
+                        my $comment
+                        = $_->{has_cpandir}
+                    ? ''
+                    : ' ' x ( 33 - length $name )
+                        . ' # ID exists, but no modules';
+                        sprintf( '    %-13s =>   ', $_->{id} )
+                        . $name
+                        . $comment . "\n";
+                } map $pause_id->{$_},
+                sort keys %{ $acdd->{debian_dev} } ),
+            $postamble
+        ]
+    );
+    speed_of "generating the Perl module";
+}
+
+__END__
+
+=head1 NAME
+
+acdd - Acme::CPANAuthors::DebianDev update helper
+
+=head1 SYNOPSIS
+
+ acdd [options] [arguments]
+
+=head1 OPTIONS AND ARGUMENTS
+
+In typical L<Getopt::Long> fashion, all options can be abbreviated
+as long as the shorter version is unambiguous.
+
+=head2 Main options
+
+ --search          Look for CPAN authors in the Staff data
+
+ --module-update   Update the module using the --acdd YAML file
+
+ --verbose         Be verbose
+ --time            Print some speed measurements
+
+ --help            Print a short help summary and exit
+ --manual          Print the full manual page and exit
+
+=head2 File options
+
+These options let you define the location of the various files used by
+the program:
+
+ --acdd <file>     Path to the main data mapping file (YAML)
+                   Default: acdd.yml
+
+ --pause <file>    Path to a copy of http://www.cpan.org/authors/00whois.xml
+                   Default: 00whois.xml
+
+ --debian <file>   Path to the Debian Perl Group member list (HTML)
+                   Default: debian-dev.html
+
+ --pm <file>       Path to the main module file
+                   Default: lib/Acme/CPANAuthors/DebianDev.pm
+
+All the options default to files at the top-level of the Git repository
+checkout.
+
+=head1 DESCRIPTION
+
+B<acdd> is an helper program for managing L<Acme::CPANAuthors::DebianDev>.
+
+It relies on a mapping file between the PAUSE accounts and the identifiers
+in the Debian Perl Group member list, that can be used to generate the code
+for the main Perl module.
+
+To help with the manual maintenance of the mapping file, it can also
+search for matching names in the PAUSE and Debian lists.
+
+=head1 OPTIONS
+
+=head2 --verbose
+
+Produce more verbose output.
+
+=head2 --time
+
+Print some time measurement (was basically used to find which file takes
+the longest to load).
+
+=head2 --search
+
+Extract the useful data from the Debian Perl Group member list (yes,
+using regular expressions to process HTML) and inspects each record
+against the PAUSE author list.
+
+When a probable match is found, is output like the following, which makes
+is easy to copy and paste in the I<acdd> mapping file:
+
+    # Dominique Dumont = Dominique Dumont
+      DDUMONT: dod
+
+=head2 --module-update
+
+Updates the code of the Perl module using the information in the F<acdd.yml>
+mapping file.
+
+=head1 FILES AND FORMATS
+
+=head2 --acdd I<file>
+
+The I<acdd> mapping file has the following format (YAML):
+
+    ---
+    confirmed_not:
+      ACID:
+        - acid
+      ...
+    debian_dev:
+      ABE: abe
+      ALEXM: alexm-guest
+      ...
+
+C<confirmed_not> lists identifiers in the Debian Perl Group member
+list that are known B<not> to match the corresponding PAUSE account
+(i.e. false positives to the algorithm used by B<--search>).
+
+C<debian_dev> maps PAUSE id to Debian usernames.
+
+Default: F<acdd.yml>.
+
+=head2 --pause I<file>
+
+Path to a copy of the PAUSE whois XML file, as found on
+L<http://www.cpan.org/authors/00whois.xml>.
+
+Default: F<00whois.xml>.
+
+=head2 --debian I<file>
+
+The file lists the members of the Debian Perl Group on alioth, as obtained
+from L<https://alioth.debian.org/project/memberlist.php?group_id=30274>.
+
+Default: F<debian-dev.html>.
+
+=head2 --module I<file>
+
+The source file for L<Acme::CPANAuthors::DebianDev>.
+
+Default: F<lib/Acme/CPANAuthors/DebianDev.pm>.
+
+=head1 AUTHOR
+
+Philippe Bruhat (BooK).
+
+=cut
