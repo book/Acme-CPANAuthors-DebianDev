@@ -3,9 +3,6 @@ package Acme::CPANAuthors::DebianDev;
 use 5.006;
 use strict;
 use warnings;
-no  warnings 'syntax';
-
-our $VERSION = '1.000';
 
 use Acme::CPANAuthors::Register (
     DDUMONT       =>   "Dominique Dumont",
