@@ -42,6 +42,7 @@ use Acme::CPANAuthors::Register (
     FRL           =>   "Frank Lichtenheld",              # ID exists, but no modules
     GANGLION      =>   "Joel Roth",
     GLAUCO        =>   "THIAGO GLAUCO SANCHEZ",          # ID exists, but no modules
+    GREGOA        =>   "Gregor Herrmann",                # ID exists, but no modules
     GUIMARD       =>   "Xavier Guimard",
     HACHI         =>   "Jonathan Steinert",
     HAGGAI        =>   "Alan Haggai Alavi",
